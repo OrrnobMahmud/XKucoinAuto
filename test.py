@@ -17,7 +17,7 @@ def art(total_accounts, use_proxy):
     print(Fore.MAGENTA + Style.BRIGHT + r"""
     ┌────────────────────────────────────────────────────┐
     │ Orrnob Drops Automation Project                    │
-    │        Auto Claim For XkucoinBot                         │
+    │        Auto Claim For XKucoinFrog                         │
     └────────────────────────────────────────────────────┘
     Author  : Orrnob Mahmud
     Github  : https://github.com/OrrnobMahmud
