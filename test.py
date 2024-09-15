@@ -115,7 +115,7 @@ def data(cookie):
     return molecule
 
 # Updated function to tap/increment gold in account
-def tap(cookie, molecule, max_taps=3000):
+def tap(cookie, molecule, max_taps=3000, retry_delay=5, max_retries=3):
     url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/gold/increase?lang=en_US"
     headers = {
         "accept": "application/json",
@@ -139,17 +139,27 @@ def tap(cookie, molecule, max_taps=3000):
     
     taps_done = 0
     for _ in range(max_taps):
-        response = requests.post(url, headers=headers, data=form_data)
-        data = response.json()
-        if data.get('success') == True:  # Check for 'success' key instead of 'code'
-            taps_done += 1
-            colors = [Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
-            random_color = random.choice(colors)
-            print(f"{random_color}{Style.BRIGHT}Tapped {taps_done}/{max_taps}{Style.RESET_ALL}")
+        retries = 0
+        while retries < max_retries:
+            response = requests.post(url, headers=headers, data=form_data)
+            data = response.json()
+            if data.get('success') == True:
+                taps_done += 1
+                colors = [Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
+                random_color = random.choice(colors)
+                print(f"{random_color}{Style.BRIGHT}Tapped {taps_done}/{max_taps}{Style.RESET_ALL}")
+                time.sleep(5)  # Wait 5 seconds between successful taps
+                break
+            elif data.get('code') == '4000010':  # 'less increase interval' error
+                print(f"{Fore.YELLOW}Rate limited. Waiting {retry_delay} seconds before retry.{Style.RESET_ALL}")
+                time.sleep(retry_delay)
+                retries += 1
+            else:
+                print(f"{Fore.RED}Tap failed. Full response: {data}{Style.RESET_ALL}")
+                return taps_done
         else:
-            print(f"{Fore.RED}Tap failed. Full response: {data}{Style.RESET_ALL}")
-            break
-        time.sleep(0.5)  # 0.5 second delay between taps to avoid rate limiting
+            print(f"{Fore.RED}Max retries reached. Moving to next account.{Style.RESET_ALL}")
+            return taps_done
     
     return taps_done
 
@@ -192,8 +202,8 @@ def process_accounts():
             current_time = datetime.now()
             time_since_last_tap = current_time - account_last_tap[index]
             
-            if time_since_last_tap.total_seconds() < 1500:  # Check if 1500 seconds have passed
-                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Account {index + 1} is cooling down. {1500 - time_since_last_tap.total_seconds():.0f} seconds remaining.")
+            if time_since_last_tap.total_seconds() < 3600:  # Increased cooldown to 1 hour
+                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Account {index + 1} is cooling down. {3600 - time_since_last_tap.total_seconds():.0f} seconds remaining.")
                 continue
             
             print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Processing account number - {index + 1}")
@@ -212,8 +222,8 @@ def process_accounts():
             
             time.sleep(2)  # Short delay between accounts
         
-        print(f"{Fore.CYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Completed a full cycle. Waiting for 60 seconds before next cycle...")
-        time.sleep(60)  # Wait for 1 minute before starting the next cycle
+        print(f"{Fore.CYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Completed a full cycle. Waiting for 5 minutes before next cycle...")
+        time.sleep(300)  # Wait for 5 minutes before starting the next cycle
 
 if __name__ == "__main__":
     process_accounts()
