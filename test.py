@@ -174,19 +174,23 @@ def process_accounts():
     encoded_data_list = read_data_file(file_path)
     total_accounts = len(encoded_data_list)
     
-    clear_terminal()  # Clear terminal before displaying banner
-    art(total_accounts, use_proxy=False)  # Display Blum Auto banner
+    while True:
+        clear_terminal()  # Clear terminal before displaying banner
+        art(total_accounts, use_proxy=False)  # Display Blum Auto banner
 
-    # Process each account
-    for index, encoded_data in enumerate(encoded_data_list, start=1):
-        print(f"{Fore.GREEN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] account number - {index}")
-        decoded_data = decode_data(encoded_data)
-        cookie = login(decoded_data)
-        molecule = data(cookie)
-        increment = random.randint(40, 60)
-        tap(cookie, increment, molecule)
-        new_balance(cookie)
-        time.sleep(2)
+        # Process each account
+        for index, encoded_data in enumerate(encoded_data_list, start=1):
+            print(f"{Fore.GREEN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] account number - {index}")
+            decoded_data = decode_data(encoded_data)
+            cookie = login(decoded_data)
+            molecule = data(cookie)
+            increment = random.randint(40, 60)
+            tap(cookie, increment, molecule)
+            new_balance(cookie)
+            time.sleep(2)
+        
+        print(f"{Fore.YELLOW}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Waiting for 2 minutes before next cycle...")
+        time.sleep(120)  # Wait for 2 minutes (120 seconds)
 
 if __name__ == "__main__":
     process_accounts()
