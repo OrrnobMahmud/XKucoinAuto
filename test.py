@@ -141,13 +141,13 @@ def tap(cookie, molecule, max_taps=3000):
     for _ in range(max_taps):
         response = requests.post(url, headers=headers, data=form_data)
         data = response.json()
-        if data.get('code') == '200000':  # Assuming this is the success code
+        if data.get('success') == True:  # Check for 'success' key instead of 'code'
             taps_done += 1
             colors = [Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
             random_color = random.choice(colors)
             print(f"{random_color}{Style.BRIGHT}Tapped {taps_done}/{max_taps}{Style.RESET_ALL}")
         else:
-            print(f"{Fore.RED}Tap failed: {data.get('msg', 'Unknown error')}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Tap failed. Full response: {data}{Style.RESET_ALL}")
             break
         time.sleep(0.5)  # 0.5 second delay between taps to avoid rate limiting
     
@@ -206,7 +206,7 @@ def process_accounts():
             account_last_tap[index] = current_time
             
             if taps_done < 3000:
-                print(f"{Fore.YELLOW}Tapping stopped at {taps_done}. Moving to next account.")
+                print(f"{Fore.YELLOW}Tapping stopped at {taps_done} for account {index + 1}. Moving to next account.")
             else:
                 print(f"{Fore.GREEN}Completed 3000 taps for account {index + 1}.")
             
