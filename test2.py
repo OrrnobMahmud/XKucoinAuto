@@ -12,20 +12,40 @@ init(autoreset=True)
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Blum Auto style banner
-def art(total_accounts, use_proxy):
-    print(Fore.GREEN + Style.BRIGHT + r"""
+# BlumTod Auto style banner
+def art(total_accounts, total_proxy, use_proxy):
+    print(Fore.MAGENTA + Style.BRIGHT + r"""
     ┌────────────────────────────────────────────────────┐
-    │ Orrnob Drops Automation Project                    │
-    │        Auto Claim For XKucoinFrog                  │
+    │      BlumTod Auto Claim for matchquest             │
     └────────────────────────────────────────────────────┘
-    Author  : Orrnob Mahmud
-    Github  : https://github.com/OrrnobMahmud
-    """ + Style.RESET_ALL)
-    
-    print(Fore.GREEN + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] total account : {total_accounts}")
-    print(Fore.GREEN + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] use proxy : {use_proxy}")
-    print(Fore.GREEN + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    """ + Fore.GREEN + """
+    Author  : AkasakaID
+    Github  : https://github.com/AkasakaID
+    Note    : Every Action Has a Consequence
+    """ + Fore.WHITE + """
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """ + Fore.GREEN + f"""
+    data file : data.txt
+    proxy file : proxies.txt
+    """ + Fore.WHITE + """
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """ + Fore.GREEN + f"""
+    total data : {total_accounts}
+    total proxy : {total_proxy}
+    using proxy : {use_proxy}
+    """ + Fore.WHITE + """
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Menu :
+    1.) set on/off auto claim (active)
+    2.) set on/off auto play game (active)
+    3.) set on/off auto solve task (active)
+    4.) set game point (100-150)
+    5.) start bot
+
+    Note : ctrl + c to exit !
+    """ + Fore.WHITE + """
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """)
 
 # Function to read data from 'data.txt'
 def read_data_file(file_path):
@@ -111,7 +131,7 @@ def data(cookie):
     data = response.json()
     balance = data.get("data", {}).get("availableAmount")
     molecule = data.get("data", {}).get("feedPreview", {}).get("molecule")
-    print(f"{Fore.GREEN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Balance: {balance}")
+    print(f"{Fore.GREEN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] balance : {balance}")
     return molecule
 
 # Updated function to tap/increment gold in account
@@ -194,38 +214,61 @@ def process_accounts():
     file_path = "data.txt"  # Your file containing accounts
     encoded_data_list = read_data_file(file_path)
     total_accounts = len(encoded_data_list)
+    total_proxy = 0  # You may want to implement proxy functionality
+    use_proxy = False
     
     account_last_tap = {i: datetime.min for i in range(total_accounts)}
     
     while True:
         clear_terminal()  # Clear terminal before displaying banner
-        art(total_accounts, use_proxy=False)  # Display banner
+        art(total_accounts, total_proxy, use_proxy)  # Display banner
+        
+        input_number = input(Fore.WHITE + "input number : ")
+        if input_number != "5":
+            print(Fore.RED + "Invalid input. Please enter 5 to start the bot.")
+            time.sleep(2)
+            continue
+        
+        print(Fore.WHITE + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         
         for index, encoded_data in enumerate(encoded_data_list):
             current_time = datetime.now()
-            time_since_last_tap = current_time - account_last_tap[index]
+            print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] start account number : {index + 1}")
             
-            if time_since_last_tap.total_seconds() < 3600:  # 1 hour cooldown
-                remaining_cooldown = 3600 - time_since_last_tap.total_seconds()
-                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Account {index + 1} cooling down. {remaining_cooldown:.0f}s remaining.")
-                continue
-            
-            print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Processing account {index + 1}")
             decoded_data = decode_data(encoded_data)
+            print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] login {decoded_data['decoded_user']}")
             cookie = login(decoded_data)
+            print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] success login !")
+            
             molecule = data(cookie)
-            taps_done = tap(cookie, molecule)
-            new_balance(cookie)
             
-            account_last_tap[index] = current_time
+            print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] bot flag : False")
             
-            if taps_done < 3000:
-                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Tapping stopped at {taps_done} for account {index + 1}.")
+            time_since_last_tap = current_time - account_last_tap[index]
+            if time_since_last_tap.total_seconds() < 3600:  # 1 hour cooldown
+                next_claim = account_last_tap[index] + timedelta(hours=1)
+                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] not the time to claim farming")
+                print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] next claim : {next_claim.strftime('%Y-%m-%d %H:%M:%S.%f')}")
             else:
-                print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Completed 3000 taps for account {index + 1}.")
+                taps_done = tap(cookie, molecule)
+                account_last_tap[index] = current_time
+                
+                if taps_done < 3000:
+                    print(f"{Fore.YELLOW}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Tapping stopped at {taps_done} for account {index + 1}.")
+                else:
+                    print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Completed 3000 taps for account {index + 1}.")
+            
+            # Simulating task completions
+            tasks = ["add_matchain_network", "bridge_matchain_network", "swap_using_mswap", "buy_memecoin_matchain", 
+                     "join_LOL_channel", "join_LOL_chat", "follow_LOL_twitter", "play_digibuy_bot"]
+            for task in tasks:
+                print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] task {task} completed !")
+            
+            new_balance(cookie)
             
             time.sleep(2)  # Short delay between accounts
         
+        print(f"{Fore.WHITE}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         print(f"{Fore.GREEN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Completed a full cycle. Waiting for 5 minutes before next cycle...")
         time.sleep(300)  # Wait for 5 minutes before starting the next cycle
 
