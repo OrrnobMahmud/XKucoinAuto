@@ -135,7 +135,7 @@ def data(cookie):
     return molecule
 
 # Updated function to tap/increment gold in account
-def tap(cookie, molecule, max_taps=3000, retry_delay=5, max_retries=3):
+def tap(cookie, molecule, max_taps=3000, initial_retry_delay=5, max_retry_delay=60, max_retries=10):
     url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/gold/increase?lang=en_US"
     headers = {
         "accept": "application/json",
@@ -159,6 +159,7 @@ def tap(cookie, molecule, max_taps=3000, retry_delay=5, max_retries=3):
     
     taps_done = 0
     start_time = datetime.now()
+    retry_delay = initial_retry_delay
     
     for _ in range(max_taps):
         retries = 0
@@ -171,11 +172,13 @@ def tap(cookie, molecule, max_taps=3000, retry_delay=5, max_retries=3):
                     current_time = datetime.now()
                     elapsed_time = (current_time - start_time).total_seconds()
                     print(f"{Fore.GREEN}[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Tapped {taps_done}/{max_taps} (Elapsed: {elapsed_time:.2f}s)")
-                time.sleep(0.5)  # Reduced wait time between taps
+                time.sleep(0.5)  # Short delay between successful taps
+                retry_delay = initial_retry_delay  # Reset retry delay after successful tap
                 break
             elif data.get('code') == '4000010':  # 'less increase interval' error
                 print(f"{Fore.YELLOW}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Rate limited. Waiting {retry_delay} seconds before retry.")
                 time.sleep(retry_delay)
+                retry_delay = min(retry_delay * 2, max_retry_delay)  # Exponential backoff, capped at max_retry_delay
                 retries += 1
             else:
                 print(f"{Fore.RED}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tap failed. Full response: {data}")
