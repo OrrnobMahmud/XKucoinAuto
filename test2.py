@@ -1,81 +1,196 @@
 import time
-import logging
+import requests
 import random
+import urllib.parse
+import os
+from colorama import Fore, Style, init
+from datetime import datetime
 
-# Banner
-BANNER = """
-  ______   __                            __      _______                        
- /      \ /  |                          /  |    /       \                       
-/$$$$$$  |$$ |____    ______    _______  $$ |   /$$$$$$$  |  ______    _______   
-$$ |  $$/ $$      \  /      \  /       \ $$ |   $$ |__$$ | /      \  /       \  
-$$ |      $$$$$$$  | $$$$$$  |/$$$$$$$/ $$ |   $$    $$<  $$$$$$  |/$$$$$$$/   
-$$ |   __ $$ |  $$ | /    $$ |$$ |      $$ |   $$$$$$$  | /    $$ |$$ |          
-$$ \__/  |$$ |  $$ |/$$$$$$$ |$$ \_____ $$ |   $$ |  $$ |/$$$$$$$ |$$ \_____     
-$$    $$/ $$ |  $$ |$$    $$ |$$       |$$ |   $$ |  $$ |$$    $$ |$$       |    
- $$$$$$/  $$/   $$/  $$$$$$$/  $$$$$$$/ $$/    $$/   $$/  $$$$$$$/  $$$$$$$/     
+# Initialize colorama for color output
+init(autoreset=True)
 
-"""
+def clear_terminal():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-# Set up logging with custom colors: timestamp in gray, log message in green, additional info in white
-logging.basicConfig(
-    level=logging.INFO,
-    format="\033[90m%(asctime)s\033[0m \033[92m%(message)s\033[0m",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-# Tap handling class with session and timing logic
-class TapHandler:
-    def __init__(self, max_tap=3000):
-        self.max_tap = max_tap
-        self.current_tap = 0
-        self.session_start_time = time.time()
-        self.total_time = 0
-
-    def tap(self):
-        if self.current_tap < self.max_tap:
-            increment = random.randint(55, 60)  # Randomized increment between 55 and 60
-            self.current_tap += increment
-            if self.current_tap > self.max_tap:
-                self.current_tap = self.max_tap  # Ensure it doesn't exceed max tap
-            logging.info(f"Current Tap: {self.current_tap}")
-        else:
-            logging.info("Max tap reached")
-
-    def check_time(self):
-        session_duration = time.time() - self.session_start_time
-        logging.info(f"Session Duration: {session_duration:.2f} seconds")
-        self.total_time += session_duration
-        return session_duration
-
-    def reset(self):
-        self.current_tap = 0
-        self.session_start_time = time.time()
-        logging.info("Tap count reset for a new session")
-
-# Simulated logic, can replace this with your custom logic (including tapping and other tasks)
-class Simulation:
-    def __init__(self, max_tap):
-        self.tap_handler = TapHandler(max_tap)
-
-    def run(self):
-        while self.tap_handler.current_tap < self.tap_handler.max_tap:
-            self.tap_handler.tap()
-            time.sleep(random.uniform(0.1, 0.5))  # Simulate waiting period between taps
-
-        session_time = self.tap_handler.check_time()
-        if session_time > 10:  # Example session timing logic
-            self.tap_handler.reset()
-
-# Running the simulation with banner
-def main():
-    print(BANNER)
-    max_tap = 3000
-    sim = Simulation(max_tap)
+def art(total_accounts):
+    print(Fore.MAGENTA + Style.BRIGHT + r"""
+    ┌────────────────────────────────────────────────────┐
+    │ Orrnob Drops Automation Project                    │
+    │        Auto Claim For XKucoinFrog                  │
+    └────────────────────────────────────────────────────┘
+    Author  : Orrnob Mahmud
+    Github  : https://github.com/OrrnobMahmud
+    """ + Style.RESET_ALL)
     
-    for session in range(3):  # Example of running multiple sessions
-        logging.info(f"Starting session {session + 1}")
-        sim.run()
-        logging.info(f"Session {session + 1} completed")
+    print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Total accounts: {total_accounts}")
+    print(Fore.YELLOW + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+def read_data_file(file_path):
+    accounts = []
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            encoded_data = line.strip()
+            if encoded_data:
+                accounts.append(encoded_data)
+    return accounts
+
+def decode_data(encoded_data):
+    params = dict(item.split('=') for item in encoded_data.split('&'))
+
+    decoded_user = urllib.parse.unquote(params['user'])
+    decoded_start_param = urllib.parse.unquote(params['start_param'])
+
+    return {
+        "decoded_user": decoded_user,
+        "decoded_start_param": decoded_start_param,
+        "hash": params['hash'],
+        "auth_date": params['auth_date'],
+        "chat_type": params['chat_type'],
+        "chat_instance": params['chat_instance']
+    }
+
+def login(decoded_data):
+    url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/login?lang=en_US"
+    headers = {
+        "accept": "application/json",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/json",
+        "sec-ch-ua": "\"Chromium\";v=\"111\", \"Not(A:Brand\";v=\"8\"",
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": "\"Android\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-request-with": "null",
+        "Referer": "https://www.kucoin.com/miniapp/tap-game?inviterUserId=5496274031&rcode=QBSTAPN3"
+    }
+    
+    body = {
+        "inviterUserId": "5496274031",
+        "extInfo": {
+            "hash": decoded_data['hash'],
+            "auth_date": decoded_data['auth_date'],
+            "via": "miniApp",
+            "user": decoded_data['decoded_user'],
+            "chat_type": decoded_data['chat_type'],
+            "chat_instance": decoded_data['chat_instance'],
+            "start_param": decoded_data['decoded_start_param']
+        }
+    }
+
+    session = requests.Session()
+    response = session.post(url, headers=headers, json=body)
+    cookie = '; '.join([f"{cookie.name}={cookie.value}" for cookie in session.cookies])             
+    return cookie
+
+def data(cookie):
+    url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/summary?lang=en_US"
+    headers = {
+        "accept": "application/json",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/json",
+        "sec-ch-ua": "\"Chromium\";v=\"111\", \"Not(A:Brand\";v=\"8\"",
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": "\"Android\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-request-with": "null",
+        "Referer": "https://www.kucoin.com/miniapp/tap-game?inviterUserId=5496274031&rcode=QBSTAPN3",
+        "cookie": cookie
+    }
+    
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    balance = data.get("data", {}).get("availableAmount")
+    molecule = data.get("data", {}).get("feedPreview", {}).get("molecule")
+    print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + Fore.GREEN + f"Balance: {Fore.WHITE}{balance}")
+    return molecule
+
+def tap(cookie, molecule):
+    url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/gold/increase?lang=en_US"
+    headers = {
+        "accept": "application/json",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded",
+        "sec-ch-ua": "\"Chromium\";v=\"111\", \"Not(A:Brand\";v=\"8\"",
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": "\"Android\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-request-with": "null",
+        "Referer": "https://www.kucoin.com/miniapp/tap-game?inviterUserId=5496274031&rcode=QBSTAPN3",
+        "cookie": cookie
+    }
+
+    total_increment = 0
+
+    while total_increment < 3000:
+        increment = random.randint(55, 60)
+        form_data = {
+            'increment': str(increment),
+            'molecule': str(molecule)
+        }
+
+        response = requests.post(url, headers=headers, data=form_data)
+        total_increment += increment
+        
+        print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + 
+              Fore.GREEN + f"Tapped: " + Fore.WHITE + f"{increment} | " + 
+              Fore.GREEN + f"Total Tap: " + Fore.WHITE + f"{total_increment}/3000")
+        
+        time.sleep(2)
+
+def new_balance(cookie):
+    url = "https://www.kucoin.com/_api/xkucoin/platform-telebot/game/summary?lang=en_US"
+    headers = {
+        "accept": "application/json",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/json",
+        "sec-ch-ua": "\"Chromium\";v=\"111\", \"Not(A:Brand\";v=\"8\"",
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": "\"Android\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-request-with": "null",
+        "Referer": "https://www.kucoin.com/miniapp/tap-game?inviterUserId=5496274031&rcode=QBSTAPN3",
+        "cookie": cookie
+    }
+    
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    balance = data.get("data", {}).get("availableAmount")
+    print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + 
+          Fore.GREEN + f"New Balance: " + Fore.WHITE + f"{balance}")
+
+def main():
+    file_path = "data.txt"
+    encoded_data_list = read_data_file(file_path)
+    total_accounts = len(encoded_data_list)
+    
+    while True:
+        clear_terminal()
+        art(total_accounts)
+    
+        for index, encoded_data in enumerate(encoded_data_list, start=1):
+            print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + 
+                  Fore.GREEN + f"Processing Account No.{index}")
+            try:
+                decoded_data = decode_data(encoded_data)
+                cookie = login(decoded_data)
+                molecule = data(cookie)
+                tap(cookie, molecule)
+                new_balance(cookie)
+            except Exception as e:
+                print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + 
+                      Fore.RED + f"Error processing account {index}: {str(e)}")
+        
+        print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] " + 
+              Fore.YELLOW + "Waiting for 2 minutes before next cycle...")
+        time.sleep(120)
 
 if __name__ == "__main__":
     main()
