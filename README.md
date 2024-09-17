@@ -1,3 +1,5 @@
+
+
 ## Windows 
 
 1. Make sure you computer was installed python and git.
@@ -112,6 +114,9 @@
 ```javascript
 copy(Telegram.WebApp.initData)
 ```
+# Alternatively
+![image](https://github.com/user-attachments/assets/e91bf7b7-5845-4ff8-8926-acef9ab44040)
+
 
 # Run for 24/7 
 
