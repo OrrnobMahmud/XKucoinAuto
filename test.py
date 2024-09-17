@@ -26,13 +26,16 @@ def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def art(total_accounts):
-    print(Fore.MAGENTA + Style.BRIGHT + r"""
-    ┌────────────────────────────────────────────────────┐
-    │ Orrnob Drops Automation Project                    │
-    │        Auto Claim For XKucoinFrog                  │
-    └────────────────────────────────────────────────────┘
+    print(Fore.GREEN + Style.BRIGHT + r"""
+   ___                   _      __  __      _                 _ 
+  / _ \ _ _ _ _ _ _  ___| |__  |  \/  |__ _| |_  _ __ _  _ __| |
+ | (_) | '_| '_| ' \/ _ \ '_ \ | |\/| / _` | ' \| '  \ || / _` |
+  \___/|_| |_| |_||_\___/_.__/ |_|  |_\__,_|_||_|_|_|_\_,_\__,_|
+                                                                
+    Auto Claim Bot For XkuCoin - Orrnob's Drop Automation
     Author  : Orrnob Mahmud
     Github  : https://github.com/OrrnobMahmud
+    Telegram: https://t.me/verifiedcryptoairdops
     """ + Style.RESET_ALL)
     
     print(Fore.LIGHTBLACK_EX + f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Total accounts: {total_accounts}")
